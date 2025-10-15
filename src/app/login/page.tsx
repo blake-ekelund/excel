@@ -1,35 +1,46 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, ChangeEvent, FormEvent } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
+interface LoginData {
+  email: string;
+  password: string;
+}
+
 export default function LoginPage() {
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState<LoginData>({ email: '', password: '' });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleChange = (key: string, value: string) => {
+  const handleChange = (key: keyof LoginData, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    // Basic validation
     if (!formData.email || !formData.password) {
       setError('Please enter both email and password.');
       return;
     }
 
-    console.log('Logging in with:', formData);
-    // TODO: Integrate with Supabase Auth or API login endpoint
-    setSuccess(true);
+    setLoading(true);
+    try {
+      // 👉 Replace this mock with Supabase or your auth API later
+      console.log('Attempting login:', formData);
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      setSuccess(true);
+    } catch (err) {
+      console.error(err);
+      setError('Login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -44,7 +55,7 @@ export default function LoginPage() {
         transition={{ duration: 0.6 }}
         className="relative w-full max-w-md bg-white rounded-2xl shadow-lg border border-emerald-100 p-10"
       >
-        {/* Breadcrumb / Back to Home */}
+        {/* Back link */}
         <div className="mb-6">
           <Link
             href="/"
@@ -72,7 +83,9 @@ export default function LoginPage() {
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => handleChange('email', e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    handleChange('email', e.target.value)
+                  }
                   placeholder="you@example.com"
                   required
                   className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
@@ -86,7 +99,9 @@ export default function LoginPage() {
                 <input
                   type="password"
                   value={formData.password}
-                  onChange={(e) => handleChange('password', e.target.value)}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    handleChange('password', e.target.value)
+                  }
                   placeholder="••••••••"
                   required
                   className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none"
@@ -101,17 +116,21 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {error && (
-                <p className="text-red-600 text-sm mt-1">{error}</p>
-              )}
+              {error && <p className="text-red-600 text-sm mt-1">{error}</p>}
 
               <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 type="submit"
-                className="mt-4 py-3 rounded-md font-semibold text-white bg-gradient-to-r from-emerald-700 to-emerald-500 hover:from-emerald-800 hover:to-emerald-600 shadow transition"
+                disabled={loading}
+                className={`mt-4 py-3 rounded-md font-semibold text-white shadow transition 
+                  ${
+                    loading
+                      ? 'bg-emerald-400 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-emerald-700 to-emerald-500 hover:from-emerald-800 hover:to-emerald-600'
+                  }`}
               >
-                Log In
+                {loading ? 'Logging In...' : 'Log In'}
               </motion.button>
             </form>
 
@@ -139,10 +158,10 @@ export default function LoginPage() {
               You’re now logged in and can access your project dashboard.
             </p>
             <Link
-              href="/dashboard"
+              href="/portal"
               className="inline-block px-6 py-3 rounded-md font-semibold text-white bg-gradient-to-r from-emerald-700 to-emerald-500 hover:from-emerald-800 hover:to-emerald-600 shadow transition"
             >
-              Go to Dashboard
+              Go to Portal
             </Link>
           </motion.div>
         )}
